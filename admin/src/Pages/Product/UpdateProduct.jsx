@@ -86,7 +86,7 @@ export const UpdateProduct = () => {
         }
       });
       console.log('Product updated successfully', response.data);
-      navigate("/products");  // Corrected spelling
+      navigate(-1);  // Corrected spelling
     } catch (error) {
       console.error('Error updating product', error);
     }
@@ -97,7 +97,7 @@ export const UpdateProduct = () => {
   };
 
   return (
-    <div className=" mx-auto p-6">
+    <div className=" mx-auto p-6 bg-orange-200">
       <div className='flex justify-between content-center items-center my-4 '>
         <h1 className="text-2xl font-bold mb-6">Update Product</h1>
         <Button onClick={() => { navigate(-1) }}>

@@ -34,12 +34,12 @@ export const AddProduct = () => {
     try {
       const resp = await axios.get(`${URI}api/categories/`);
       setCategories(resp.data);
-      console.log(setCategories(resp.data));
-      
+      console.log(resp.data); // Log the data instead of setCategories()
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
   };
+
 
   const onSubmit = async (data) => {
     const formData = new FormData();
@@ -85,29 +85,9 @@ export const AddProduct = () => {
     setSelectedSubcategory(e.target.value);
   };
 
-  const addCategory = () => {
-    if (newCategory.trim()) {
-      setCategories([
-        ...categories,
-        { category: newCategory, subcategories: [] },
-      ]);
-      setNewCategory("");
-    }
-  };
 
-  const addSubcategory = () => {
-    if (newSubcategory.trim() && selectedCategory) {
-      setCategories(
-        categories.map((cat) =>
-          cat.category === selectedCategory
-            ? { ...cat, subcategories: [...cat.subcategories, newSubcategory] }
-            : cat
-        )
-      );
-      setNewSubcategory("");
-      setSelectedSubcategory(newSubcategory);
-    }
-  };
+
+
 
   return (
     <div className="  p-6  bg-[#feefe5] text-black w-full mx-5 rounded-md shadown-2xl">
@@ -154,42 +134,29 @@ export const AddProduct = () => {
               />
             </div>
 
-            
 
-<div>
-            <label htmlFor="category" className="block text-sm font-medium text-black">
-              Category
-            </label>
-            <select
-              id="category"
-              className="mt-1 block w-full text-black border border-gray-300 rounded-md shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              {...register("category")}
-              onChange={handleCategoryChange}
-              value={selectedCategory}
-            >
-              <option value="">Select Category</option>
-              {Array.isArray(categories) && categories.map((cat, index) => (
-                <option key={index} value={cat.category}>
-                  {cat.category}
-                </option>
-              ))}
-              <option value="add-new-category">Add New Category</option>
-            </select>
-            {selectedCategory === "add-new-category" && (
-              <div className="mt-2">
-                <input
-                  type="text"
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  placeholder="Enter new category"
-                  className="block w-full border border-gray-300 text-black rounded-md shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                />
-                <Button type="button" onClick={addCategory} className="mt-2">
-                  Add Category
-                </Button>
-              </div>
-            )}
-          </div>
+
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-black">
+                Category
+              </label>
+              <select
+                id="category"
+                className="mt-1 block w-full text-black border border-gray-300 rounded-md shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                {...register("category")}
+                onChange={handleCategoryChange}
+                value={selectedCategory}
+              >
+                <option value="">Select Category</option>
+                {Array.isArray(categories) && categories.map((cat, index) => (
+                  <option key={index} value={cat.category}>
+                    {cat.category}
+                  </option>
+                ))}
+  
+              </select>
+
+            </div>
 
 
             {/* Subcategory Selection */}
@@ -212,32 +179,13 @@ export const AddProduct = () => {
                   {categories
                     .find((cat) => cat.category === selectedCategory)
                     ?.subcategories.map((sub, index) => (
-                      <option key={index} value={sub}>
-                        {sub}
+                      <option key={index} value={sub.name}>
+                        {sub.name}
                       </option>
                     ))}
-                  <option value="add-new-subcategory">
-                    Add New Subcategory
-                  </option>
+                 
                 </select>
-                {selectedSubcategory === "add-new-subcategory" && (
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      value={newSubcategory}
-                      onChange={(e) => setNewSubcategory(e.target.value)}
-                      placeholder="Enter new subcategory"
-                      className="block w-full border border-gray-300 text-black rounded-md shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    />
-                    <Button
-                      type="button"
-                      onClick={addSubcategory}
-                      className="mt-2"
-                    >
-                      Add Subcategory
-                    </Button>
-                  </div>
-                )}
+                
               </div>
             )}
 

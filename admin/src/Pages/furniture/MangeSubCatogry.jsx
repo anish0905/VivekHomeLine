@@ -26,13 +26,15 @@ const MangeSubCatogry = () => {
   }, []);
 
   // Search handler
-  useEffect(() => {
-    const filtered = categories.filter(category =>
-      category.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredCategories(filtered);
-    setCurrentPage(1); // Reset to first page on search
-  }, [searchQuery, categories]);
+ // Search handler
+useEffect(() => {
+  const filtered = categories.filter(category => 
+    category.name && category.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  setFilteredCategories(filtered);
+  setCurrentPage(1); // Reset to first page on search
+}, [searchQuery, categories]);
+
 
   // Add category handler
   const handleAddCategory = (newCategory) => {

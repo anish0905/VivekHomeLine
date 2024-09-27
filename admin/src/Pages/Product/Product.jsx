@@ -82,6 +82,11 @@ const Product = () => {
             <strong>Categories:</strong> {product.categories}
           </p>
           <p className="mb-4">
+            <strong>subcategory
+            :</strong> {product.subcategory
+            }
+          </p>
+          <p className="mb-4">
             <strong>Specials Category:</strong>{" "}
             {product.specialsCategory.join(", ")}
           </p>
