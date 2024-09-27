@@ -36,6 +36,8 @@ const furnitureSubcatogry = require("./admin/routes/furnitureSubcatogryRoute" )
 
 const videoRoute = require("./admin/routes/videoRoute");
 
+const metaRoutes = require("./MetaDescription/metaRoutes")
+
 connectDB();
 const app = express();
 app.use(express.json());
@@ -79,6 +81,8 @@ app.use('/api' , privacyRoutes)
 //video
 
 app.use("/api/video", videoRoute);
+
+app.use("/api/meta", metaRoutes)
 
 //deliver boys Users
 

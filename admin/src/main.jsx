@@ -30,6 +30,7 @@ import { ProductDetailsById } from "./Pages/Product/ProductDetailsById";
 import MangeSubCatogry from "./Pages/furniture/MangeSubCatogry";
 import Video from "./Pages/video/Video";
 import CategoryBanner from "./Pages/catogry/CategoryBanner";
+import MetaTag from "./Pages/MetaController/MetaTag";
 
 // Create the router instance
 const router = createBrowserRouter([
@@ -125,6 +126,10 @@ const router = createBrowserRouter([
       {
         path: "/category-banner",
         element: <CategoryBanner/>,
+      },
+      {
+        path: "/metatag",
+        element: <MetaTag/>,
       }
 
 

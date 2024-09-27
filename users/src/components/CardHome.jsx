@@ -6,6 +6,34 @@ import { Helmet } from "react-helmet";
 
 // Card Component
 const Card = ({ img, title, index }) => {
+  const URI = import.meta.env.VITE_API_URL;
+  const [metaData, setMetaData] = useState({
+    title: "",
+    description: "",
+    keywords: [],
+    author: "",
+  });
+
+  useEffect(() => {
+    // Fetch metadata from API
+    const fetchMetadata = async () => {
+      try {
+        const response = await axios.get(`${URI}api/meta/metadata`);
+        const data = response.data.data; // Assuming the API returns an array of metadata
+        console.log("apple" , data[0]);
+        
+        // Set the first metadata item (if your API returns multiple, you may need to adjust this)
+        if (data.length > 0) {
+          setMetaData(data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching metadata:", error);
+      }
+    };
+
+    fetchMetadata();
+  }, []);
+
   return (
     <motion.div
       className="w-full md:w-72 lg:w-72 xl:w-80 rounded-lg overflow-hidden card"
@@ -14,6 +42,12 @@ const Card = ({ img, title, index }) => {
       transition={{ duration: 0.1, delay: index * 0.05 }} // Faster entrance
       whileHover={{ scale: 1.15, rotate: 2, boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)" }}
     >
+      <Helmet>
+        <title>{metaData.title}</title>
+        <meta name="description" content={metaData.description} />
+        <meta name="keywords" content={metaData.keywords.join(", ")} />
+        <meta name="author" content={metaData.author} />
+      </Helmet>
       <div className="h-60 overflow-hidden">
         <img
           src={img}
@@ -52,7 +86,7 @@ const CardHome = () => {
   };
 
   return (
-    <div className="bg-[#00171f] lg:py-5 py-4  font-sans text-white rounded-md lg:rounded-full my-10">
+    <div className="bg-[#00171f] lg:py-5 py-4 font-sans text-white rounded-md lg:rounded-full my-10">
       <h1 className="lg:text-3xl xl:text-4xl text-md text-center lg:pt-16 lg:pb-16 font-bold px-4 py-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
         <span className="text-5xl font-bold text-orange-500">Transform</span> Your Space <span className="text-[#80ed99] text-4xl">,</span> Explore Our <span className="text-5xl font-bold text-orange-500">Categories</span>
       </h1>
@@ -69,13 +103,6 @@ const CardHome = () => {
               title={data.category}
               index={index}
             />
-
-            <Helmet>
-              <title>{data.category}</title>
-              <meta name="description" content={data.descriptions} />
-              <meta name="keywords" content={categoriesData.map((data) => data.category).join(", ")} />
-              <meta name="author" content="YourCompanyName" />
-            </Helmet>
           </Link>
         ))}
       </div>
