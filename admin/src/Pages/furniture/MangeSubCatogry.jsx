@@ -13,56 +13,42 @@ const MangeSubCatogry = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20; // Number of items to display per page
   const URI = import.meta.env.VITE_API_URL;
+// Add category handler
+const handleAddCategory = (newCategory) => {
+  axios.post(`${URI}api/furnitureSubcatogry/subcategory`, newCategory).then((res) => {
+    fetchCategories(); // Refetch the categories instead of manually updating the state
+  });
+};
 
-  // Fetch categories from the server
-  useEffect(() => {
-    axios.get(`${URI}api/furnitureSubcatogry/subcategories`).then((res) => {
-      console.log(res.data);
-      setCategories(res.data);
-      setFilteredCategories(res.data); // Initialize filtered categories
-    }).catch(err => {
-      console.error(err);
-    });
-  }, []);
+// Update category handler
+const handleUpdateCategory = (updatedCategory) => {
+  axios.put(`${URI}api/furnitureSubcatogry/subcategory/${selectedCategory._id}`, updatedCategory).then((res) => {
+    fetchCategories(); // Refetch the categories
+  });
+};
 
-  // Search handler
- // Search handler
+// Delete category handler
+const handleDeleteCategory = (id) => {
+  axios.delete(`${URI}api/furnitureSubcatogry/subcategory/${id}`).then(() => {
+    fetchCategories(); // Refetch the categories
+  });
+};
+
+// Function to refetch categories
+const fetchCategories = () => {
+  axios.get(`${URI}api/furnitureSubcatogry/subcategories`).then((res) => {
+    setCategories(res.data);
+    setFilteredCategories(res.data); // Update filtered categories as well
+  }).catch(err => {
+    console.error(err);
+  });
+};
+
+// Fetch categories on component mount
 useEffect(() => {
-  const filtered = categories.filter(category => 
-    category.name && category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  setFilteredCategories(filtered);
-  setCurrentPage(1); // Reset to first page on search
-}, [searchQuery, categories]);
+  fetchCategories();
+}, []);
 
-
-  // Add category handler
-  const handleAddCategory = (newCategory) => {
-    axios.post(`${URI}api/furnitureSubcatogry/subcategory`, newCategory).then((res) => {
-      setCategories([...categories, res.data]);
-      setFilteredCategories([...filteredCategories, res.data]); // Update filtered categories as well
-    });
-  };
-
-  // Update category handler
-  const handleUpdateCategory = (updatedCategory) => {
-    axios.put(`${URI}api/furnitureSubcatogry/subcategory/${selectedCategory._id}`, updatedCategory).then((res) => {
-      const updatedCategories = categories.map((cat) =>
-        cat._id === selectedCategory._id ? res.data : cat
-      );
-      setCategories(updatedCategories);
-      setFilteredCategories(updatedCategories); // Update filtered categories as well
-    });
-  };
-
-  // Delete category handler
-  const handleDeleteCategory = (id) => {
-    axios.delete(`${URI}api/furnitureSubcatogry/subcategory/${id}`).then(() => {
-      const updatedCategories = categories.filter((cat) => cat._id !== id);
-      setCategories(updatedCategories);
-      setFilteredCategories(updatedCategories); // Update filtered categories as well
-    });
-  };
 
   // Pagination logic
   const indexOfLastCategory = currentPage * itemsPerPage;

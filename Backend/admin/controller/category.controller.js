@@ -90,12 +90,17 @@ exports.updateCategory = async (req, res) => {
     }
 
     // Send the response with updated category details
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Category updated successfully',
       category: updatedCategory, // This will include the updated category details
     });
+    
   } catch (error) {
-    res.status(500).json({ message: 'Error updating category', error });
+    // Log the actual error to understand the issue
+    console.log('Error while updating category:', error);
+
+    // Respond with error
+    return res.status(500).json({ message: 'Error updating category', error });
   }
 };
 

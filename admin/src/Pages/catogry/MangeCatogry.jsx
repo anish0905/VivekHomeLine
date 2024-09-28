@@ -34,14 +34,12 @@ const ManageCategory = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setCategoriesData([...categoriesData, resp.data]); // Add new category
       setAlert({
         type: "success",
         message: "Category added successfully!",
       });
-
-      fetchCategories();
-      setIsAddModalOpen(false);
+      fetchCategories(); // Fetch categories again after adding
+      setIsAddModalOpen(false); // Close modal after save
     } catch (error) {
       console.error("Error saving category:", error);
       setAlert({
@@ -56,21 +54,24 @@ const ManageCategory = () => {
       await axios.put(`${URI}api/categories/${categoryId}`, updatedData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      fetchCategories(); // Refresh categories
+  
       setAlert({
         type: "success",
         message: "Category updated successfully!",
       });
-      setIsEditModalOpen(false);
+      fetchCategories(); // Refresh categories
+      setIsEditModalOpen(false); // Close the modal after update
+      setSelectedCategory(null); // Clear selected category
     } catch (error) {
       console.error("Error updating category:", error);
-      setAlert({
-        type: "error",
-        message: "Failed to update category.",
-      });
+      // setAlert({
+      //   type: "error",
+      //   message: "Failed to update category.",
+      // });
     }
   };
+  
+  
 
   const handleDeleteCategory = async (categoryId) => {
     try {
@@ -95,7 +96,7 @@ const ManageCategory = () => {
       category.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
-  
+
   return (
     <div className="lg:py-5 py-4 px-4 font-sans text-white w-full flex-row items-center content-center justify-center">
       <div className="flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
@@ -222,7 +223,10 @@ const ManageCategory = () => {
       {/* Add Category Modal */}
       <AddCategoryModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false); 
+          fetchCategories(); // Fetch updated categories when the modal is closed
+        }}
         onSave={handleSaveCategory}
       />
 
@@ -230,10 +234,13 @@ const ManageCategory = () => {
       {selectedCategory && (
         <UpdateCategoryModal
           isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedCategory(null); // Clear selected category
+            fetchCategories(); // Fetch updated categories when the modal is closed
+          }}
           onSave={(updatedData) => {
-            handleUpdateCategory(selectedCategory._id, updatedData); // Pass the selected category ID and updated data
-            setSelectedCategory(null); // Clear selected category after update
+            handleUpdateCategory(selectedCategory._id, updatedData); // Pass the category ID and updated data
           }}
           category={selectedCategory}
         />
