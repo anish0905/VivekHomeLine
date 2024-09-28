@@ -309,6 +309,14 @@ const Navbar = () => {
                 <Edit className="h-5 w-5" />
                 Manage Video
               </Link>
+
+              <Link
+                to="/gallery"
+                className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+              >
+                <Edit className="h-5 w-5" />
+              Gallery
+              </Link>
             </div>
           )}
         </div>

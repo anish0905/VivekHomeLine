@@ -177,7 +177,7 @@ const UpdateCategoryModal = ({ isOpen, onClose, onSave, category }) => {
             </div>
           )}
 
-          <div>
+          <div className="max-h-60 overflow-y-auto">
             <Label htmlFor="subcategory">Subcategories</Label>
             {formData.subcategories.map((sub, index) => (
               <div key={index} className="flex items-center space-x-2">

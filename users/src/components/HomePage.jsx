@@ -18,6 +18,7 @@ import Video from "./Video";
 import { Api } from "../Api";
 
 const HomePage = () => {
+  const URI = import.meta.env.VITE_API_URL;
   const [metaData, setMetaData] = useState({
     title: "",
     description: "",
@@ -29,7 +30,7 @@ const HomePage = () => {
     // Fetch metadata from API
     const fetchMetadata = async () => {
       try {
-        const response = await axios.get("http://localhost:5002/api/meta/metadata");
+        const response = await axios.get(`${URI}api/meta/metadata`);
         const data = response.data.data; // Assuming the API returns an array of metadata
         // Set the first metadata item (if your API returns multiple, you may need to adjust this)
         if (data.length > 0) {

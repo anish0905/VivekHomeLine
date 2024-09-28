@@ -37,6 +37,7 @@ const furnitureSubcatogry = require("./admin/routes/furnitureSubcatogryRoute" )
 const videoRoute = require("./admin/routes/videoRoute");
 
 const metaRoutes = require("./MetaDescription/metaRoutes")
+const galleryRoute = require("./contentManagment/routes/gallery");
 
 connectDB();
 const app = express();
@@ -48,6 +49,7 @@ app.get("/", (req, res) => {
   res.send("API is running successfully");
 });
 // Routes
+app.use("/api/admin",galleryRoute)
 app.use("/api/admin",categoryBanner);
 app.use("/api/admin", navHeaderRoutes);
 app.use("/api/address", addressRoutes);

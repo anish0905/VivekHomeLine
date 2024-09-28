@@ -9,7 +9,7 @@ const bookNowSchema = mongoose.Schema(
     phoneNumber: { type: String },
     status: {
       type: String,
-      enum: ["pending", "Processing","confirm"], 
+      enum: ["pending", "Processing","confirm","cancelled"], 
       default: "pending",
     },
   },

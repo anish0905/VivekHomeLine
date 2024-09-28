@@ -25,6 +25,7 @@ import SelectAddress from "./components/cart/SelectAddress";
 import PaymentHomePage from "./components/payment/PaymentHomepage"
 import OrderDetails from "./components/UserProfile/OrderDetails"
 import { SubCategoryByCategory } from "./components/category/SubCategoryByCategory";
+import Gallery from "./components/Gallery";
 
 const router = createBrowserRouter([
   {
@@ -99,6 +100,10 @@ const router = createBrowserRouter([
       },{
         path: "/subcategoryDetails/:id",
         element: <SubCategoryByCategory /> // Add the CheckoutForm component when the path is "/checkoutForm"
+      },
+      {
+        path: "/gallery",
+        element: <Gallery/>,
       }
      
      

@@ -1,89 +1,39 @@
-// src/components/MiniDrawer.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
-// Categories data
-const categories = [
-  {
-    name: "Services",
-    subcategories: [
-      "Curtain Stitching",
-      "Curtains and Bracket Installation",
-      "Wallpapers Installations",
-      "Wooden Flooring Installation",
-      "Carpets Installation",
-      "All Furniture Works",
-      "Electric Works",
-    ],
-  },
-  {
-    name: "Interior Design",
-    subcategories: [
-      "Full Home Interior",
-      "Wardrobe",
-      "Kitchen",
-      "Living Room",
-      "False Ceiling",
-      "Interior Lighting",
-    ],
-  },
-  {
-    name: "Curtains",
-    subcategories: ["Readymade Curtains", "Customized Curtains"],
-  },
-  {
-    name: "Blinds",
-    subcategories: [
-      "Roman Blinds",
-      "Zebra Blinds",
-      "Wooden Blinds",
-      "PVC Blinds",
-      "Roller Blinds",
-    ],
-  },
-  {
-    name: "Mattress",
-    subcategories: ["Peps Mattress"],
-  },
-  {
-    name: "Store Locator",
-    subcategories: ["Dining Tables", "Dining Chairs", "Buffets"],
-  },
-  {
-    name: "Wallpapers",
-    subcategories: [
-      "Customized Wallpapers",
-      "Imported Wallpapers",
-      "Foam Panels",
-      "Kitchen Wallpapers",
-      "Bathroom Wallpapers",
-    ],
-  },
-  {
-    name: "Furniture",
-    subcategories: [
-      "Customized Sofa Set",
-      "Customized Bed",
-      "Customized Dining Table & Chair",
-    ],
-  },
-  {
-    name: "Flooring",
-    subcategories: [
-      "Wooden Flooring",
-      "Vinyl Flooring",
-      "Artificial Grass",
-      "Wall-to-wall Carpet",
-      "Carpet Tiles",
-      "Handmade Carpets",
-      "Gym Tiles",
-    ],
-  },
-];
+// Function to capitalize words
+const capitalizeWords = (str) => {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
-const MiniDrawer = ({ isOpen, onClose }) => {
+const MiniDrawer = ({ isOpen, onClose, setIsLoginModalOpen }) => { // Accept setIsLoginModalOpen as a prop
   const [openCategory, setOpenCategory] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const token = localStorage.getItem("token"); // Check if token exists for login status
+
+  const URI = import.meta.env.VITE_API_URL;
+
+  // Fetch categories from the API
+  useEffect(() => {
+    fetchCategories();
+  }, [URI]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${URI}api/admin/navheaders`);
+      const categoriesData = response.data;
+      setCategories(categoriesData);
+      localStorage.setItem("categories", JSON.stringify(categoriesData)); // Save categories to local storage (optional)
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const handleCategoryClick = (index) => {
     setOpenCategory(openCategory === index ? null : index);
@@ -102,62 +52,70 @@ const MiniDrawer = ({ isOpen, onClose }) => {
         </button>
       </div>
       <ul className="p-4 space-y-2">
-        {/* Categories */}
-        <li>
-          <button
-            className="w-full text-left p-2 rounded hover:bg-gray-700 transition duration-200"
-            onClick={() => handleCategoryClick(null)}
-          >
-            Categories
-          </button>
-          {categories.map((category, index) => (
-            <div key={category.name} className="relative">
-              <button
-                className="w-full text-left p-2 rounded hover:bg-gray-700 transition duration-200"
-                onClick={() => handleCategoryClick(index)}
-              >
-                {category.name}
-              </button>
-              {openCategory === index && (
-                <ul className="pl-4 mt-2 space-y-1">
-                  {category.subcategories.map((subcategory) => (
-                    <li key={subcategory}>
-                      <Link
-                        to={`/category/${encodeURIComponent(subcategory)}`}
-                        className="block p-2 rounded hover:bg-gray-600 transition duration-200"
-                        onClick={() => {
-                          onClose();
-                        }}
-                      >
-                        {subcategory}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-        </li>
-
-        {/* Cart */}
+        {/* Static Links */}
         <li>
           <Link
-            to="/cart"
+            to="/"
             className="block p-2 rounded hover:bg-gray-700 transition duration-200"
+            onClick={onClose}
           >
-            Cart
+            Home
           </Link>
         </li>
 
-        {/* Profile */}
-        <li>
-          <Link
-            to="/profile"
-            className="block p-2 rounded hover:bg-gray-700 transition duration-200"
-          >
-            Profile
-          </Link>
-        </li>
+        {!token && (
+          <li>
+            <button
+              className="block p-2 rounded hover:bg-gray-700 transition duration-200"
+              onClick={() => {
+                setIsLoginModalOpen(true); // Open Login Modal
+                onClose();
+              }}
+            >
+              Login
+            </button>
+          </li>
+        )}
+
+        {token && (
+          <li>
+            <Link
+              to="/user-profile/myaccount"
+              className="block p-2 rounded hover:bg-gray-700 transition duration-200"
+              onClick={onClose}
+            >
+              My Account
+            </Link>
+            {/* Other account-related links */}
+          </li>
+        )}
+
+        {/* Dynamic Categories fetched from API */}
+        {categories.map((category, index) => (
+          <li key={category._id} className="relative">
+            <button
+              className="w-full text-left p-2 rounded hover:bg-gray-700 transition duration-200"
+              onClick={() => handleCategoryClick(index)}
+            >
+              {capitalizeWords(category.categories)}
+            </button>
+            {openCategory === index && (
+              <ul className="pl-4 mt-2 space-y-1">
+                {category.subcategories.map((subcategory) => (
+                  <li key={subcategory}>
+                    <Link
+                      to={`/subcategory/${encodeURIComponent(subcategory)}/shop-in-bangalore`}
+                      className="block p-2 rounded hover:bg-gray-600 transition duration-200"
+                      onClick={onClose}
+                    >
+                      {capitalizeWords(subcategory)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
       </ul>
     </div>
   );

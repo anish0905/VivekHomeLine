@@ -74,7 +74,7 @@ const Navbar2 = () => {
               Home
             </a>
             <a
-              href="/"
+              href="/gallery"
               className=" px-2 py-1 rounded hover:text-light-green-700 transition duration-200 text-white"
             >
               Gallery

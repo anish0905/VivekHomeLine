@@ -31,6 +31,7 @@ import MangeSubCatogry from "./Pages/furniture/MangeSubCatogry";
 import Video from "./Pages/video/Video";
 import CategoryBanner from "./Pages/catogry/CategoryBanner";
 import MetaTag from "./Pages/MetaController/MetaTag";
+import Gallery from "./components/contentManagment/Gallery";
 
 // Create the router instance
 const router = createBrowserRouter([
@@ -130,6 +131,11 @@ const router = createBrowserRouter([
       {
         path: "/metatag",
         element: <MetaTag/>,
+      },
+      {
+        path: "/gallery",
+        element: <Gallery/>
+        ,
       }
 
 

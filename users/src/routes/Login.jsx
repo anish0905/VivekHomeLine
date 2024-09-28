@@ -7,7 +7,6 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import GoogleIcon from "@mui/icons-material/Google";
 import Register from "./Register";
 
-
 const Login = ({ setIsLoginModalOpen }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [loginWithOTP, setLoginWithOTP] = useState(false);
@@ -32,21 +31,21 @@ const Login = ({ setIsLoginModalOpen }) => {
         password: password,
       });
 
-    
-        // Store token in localStorage
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userId", response.data.user._id);
-        localStorage.setItem("email", response.data.user.email);
+      // Store token in localStorage
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("userId", response.data.user._id);
+      localStorage.setItem("email", response.data.user.email);
 
-        // Show success alert
-        Swal.fire({
-          icon: "success",
-          title: "Login Successful",
-          text: "You have successfully logged in.",
-        });
+      // Show success alert
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful",
+        text: "You have successfully logged in.",
+      });
 
-        setIsLoginModalOpen(false);
-  
+      // Close modal after successful login
+      setIsLoginModalOpen(false);
+
     } catch (error) {
       console.error("Login failed", error);
       Swal.fire({
@@ -93,20 +92,19 @@ const Login = ({ setIsLoginModalOpen }) => {
         otp,
       });
 
-     
-        // Store token in localStorage
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userId", response.data.user._id);
+      // Store token in localStorage
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("userId", response.data.user._id);
 
-        Swal.fire({
-          icon: "success",
-          title: "Login Successful",
-          text: "You have successfully logged in.",
-        });
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful",
+        text: "You have successfully logged in.",
+      });
 
-        // Close the login modal
-        setIsLoginModalOpen(false);
-      
+      // Close modal after successful OTP login
+      setIsLoginModalOpen(false);
+
     } catch (error) {
       console.error("OTP verification failed", error);
       Swal.fire({
