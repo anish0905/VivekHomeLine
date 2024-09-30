@@ -36,11 +36,11 @@ const cartItemSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: String,},
 
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  mobile: { type: String },
+  email: { type: String,unique: true },
+  password: { type: String },
+  mobileNumber: { type: String },
 
   isVerified: { type: Boolean, default: false },
   otp: { type: String, required: true },

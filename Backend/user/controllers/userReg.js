@@ -1,6 +1,24 @@
 // controllers/authController.js
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
+const twilio = require("twilio")
+const jwt = require("jsonwebtoken")
+
+const generateOTP = (length) => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
+};
+
+const sendOtp = async (mobileNumber) => {
+  try {
+    const verification = await client.verify
+      .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+      .verifications.create({ to: mobileNumber, channel: "sms" });
+    console.log(`OTP sent to ${mobileNumber}. SID: ${verification.sid}`);
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    throw new Error("Failed to send OTP. Please verify the phone number.");
+  }
+};
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -12,6 +30,12 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false,
   },
 });
+
+const client = new twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
 
 exports.register = async (req, res) => {
   try {
@@ -67,20 +91,27 @@ exports.register = async (req, res) => {
   }
 };
 
+
 exports.verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).send("User not found");
-  if (user.otp !== otp) return res.status(400).send("Invalid OTP");
-  if (user.otpExpires < Date.now()) return res.status(400).send("OTP expired");
+  const { phoneNumber, otp } = req.body;
+  try {
+      const verificationCheck = await client.verify.services(config.twilio.verifyServiceSid)
+          .verificationChecks
+          .create({ to: phoneNumber, code: otp });
 
-  user.isVerified = true;
-  user.otp = undefined;
-  user.otpExpires = undefined;
-
-  await user.save();
-  res.status(200).send("Email verified successfully");
+      if (verificationCheck.status === "approved") {
+          await User.updateOne({ phoneNumber }, { isVerified: true });
+          res.status(200).json({ message: "OTP verified successfully." });
+      } else {
+          res.status(400).json({ message: "Invalid OTP." });
+      }
+  } catch (error) {
+      res.status(500).json({ message: "Error verifying OTP", error });
+  }
 };
+
+
+
 
 exports.resendOtp = async (req, res) => {
   const { email } = req.body;
@@ -103,22 +134,30 @@ exports.resendOtp = async (req, res) => {
   });
 };
 
+
+// Function to generate a 6-digit OTP
+
+
+// Login
 exports.login = async (req, res) => {
+  const { phoneNumber, password } = req.body;
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).send("User not found");
-    if (!user.isVerified) return res.status(400).send("Email not verified");
+      const user = await User.findOne({ phoneNumber });
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+          return res.status(401).json({ message: "Invalid credentials" });
+      }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) return res.status(400).send("Invalid password");
+      if (!user.isVerified) {
+          return res.status(403).json({ message: "User not verified." });
+      }
 
-    const token = user.generateAuthToken();
-    res.send({ token, user });
+      const token = jwt.sign({ id: user._id }, config.jwtSecret, { expiresIn: '1h' });
+      res.status(200).json({ token });
   } catch (error) {
-    res.status(500).send("Server error");
+      res.status(500).json({ message: "Error logging in", error });
   }
 };
+
 
 exports.addItemToCart = async (req, res) => {
   const {
