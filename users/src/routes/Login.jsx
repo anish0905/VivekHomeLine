@@ -4,21 +4,22 @@ import Swal from "sweetalert2";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import GoogleIcon from "@mui/icons-material/Google";
 import Register from "./Register";
+import { useNavigate } from "react-router-dom";
 
 const Login = ({ setIsLoginModalOpen }) => {
-  const [isRegister, setIsRegister] = useState(false);
   const [loginWithOTP, setLoginWithOTP] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("+91");
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [userId, setUserId] = useState("");
   const URI = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
 
   // Function to handle sending OTP
   const handleSendOTP = async () => {
     try {
       const response = await axios.post(`${URI}api/user/login`, {
-        mobileNumber: phoneNumber.length === 13 ? phoneNumber : null,
+        phoneNumber: phoneNumber.length === 13 ? phoneNumber : null,
         email: usernameOrEmail || null,
       });
 
@@ -50,7 +51,7 @@ const Login = ({ setIsLoginModalOpen }) => {
     try {
       const response = await axios.post(`${URI}api/user/verifyOtp`, {
         otp,
-        mobileNumber: phoneNumber.length === 13 ? phoneNumber : null,
+        phoneNumber: phoneNumber.length === 13 ? phoneNumber : null,
         email: usernameOrEmail || null,
       });
 
@@ -67,6 +68,7 @@ const Login = ({ setIsLoginModalOpen }) => {
 
       // Close modal after successful login
       setIsLoginModalOpen(false);
+      navigate(-1);
     } catch (error) {
       console.error("OTP verification failed", error);
       Swal.fire({
@@ -78,8 +80,9 @@ const Login = ({ setIsLoginModalOpen }) => {
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Login</h2>
+    <div className="flex justify-center content-center items-center my-40">
+      <div className="flex flex-col items-center p-6 bg-blue-gray-300 rounded-lg shadow-md text-black">
+      <h2 className="text-2xl font-bold mb-4">Login With Mobile No</h2>
       {!loginWithOTP ? (
         <div className="w-full">
           <input
@@ -122,19 +125,9 @@ const Login = ({ setIsLoginModalOpen }) => {
           </button>
         </div>
       )}
-      <div className="flex items-center justify-between w-full mt-4">
-        <button
-          onClick={() => setIsRegister(true)}
-          className="text-blue-500 hover:underline"
-        >
-          Register
-        </button>
-        <div className="flex space-x-4">
-          <FacebookIcon className="text-blue-600 cursor-pointer hover:text-blue-800" />
-          <GoogleIcon className="text-red-600 cursor-pointer hover:text-red-800" />
-        </div>
-      </div>
-      {isRegister && <Register setIsRegister={setIsRegister} />}
+      
+     
+    </div>
     </div>
   );
 };

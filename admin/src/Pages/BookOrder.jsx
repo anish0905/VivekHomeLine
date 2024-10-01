@@ -10,15 +10,12 @@ const BookOrder = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
-  const [otpModalOpen, setOtpModalOpen] = useState(false);
-  const [otp, setOtp] = useState("");
   const [currentOrderId, setCurrentOrderId] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [ordersPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-  const [expandedOrders, setExpandedOrders] = useState({}); // Track which orders are expanded
-  const navigate = useNavigate()
+  const [expandedOrders, setExpandedOrders] = useState({});
+  const navigate = useNavigate();
 
   const URI = import.meta.env.VITE_API_URL;
 
@@ -56,7 +53,6 @@ const BookOrder = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(order =>
-        order.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.address.phone.includes(searchTerm) ||
         order.products.some(product =>
           product.productName && product.productName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -73,7 +69,21 @@ const BookOrder = () => {
     } else if (status === "processing") {
       updateOrderStatus(orderId, "shipped");
     } else if (status === "shipped") {
-      delivered(orderId, userId);
+      await delivered(orderId, userId);
+    }
+  };
+
+  const delivered = async (orderId, userId) => {
+    try {
+      await axios.patch(`${URI}api/productOrder/changeOrderStatus`, {
+        orderId,
+        status: "delivered",
+      });
+      fetchOrder();
+      Swal("Success", "Order has been marked as delivered", "success");
+    } catch (error) {
+      console.error("Error marking order as delivered:", error);
+      Swal("Error", "Failed to mark order as delivered", "error");
     }
   };
 
@@ -88,34 +98,6 @@ const BookOrder = () => {
     } catch (error) {
       console.error("Error updating order status:", error);
       Swal("Error", "Failed to update order status", "error");
-    }
-  };
-
-  const delivered = async (orderId, userId) => {
-    try {
-      await axios.put(`${URI}api/productOrder/sendOpt/${userId}`);
-      Swal("Order Delivered", "An OTP has been sent to the user", "success");
-      setCurrentOrderId(orderId);
-      setCurrentUserId(userId);
-      setOtpModalOpen(true);
-    } catch (error) {
-      console.error("Error:", error);
-      Swal("Error", "Failed to send OTP", "error");
-    }
-  };
-
-  const verifyOrder = async () => {
-    try {
-      await axios.put(`${URI}api/productOrder/vefifyOrder`, {
-        orderId: currentOrderId,
-        otp,
-      });
-      Swal("Order Verified", "The order has been successfully verified", "success");
-      setOtpModalOpen(false);
-      fetchOrder();
-    } catch (error) {
-      console.error("Error:", error);
-      Swal("Error", "Failed to verify the order", "error");
     }
   };
 
@@ -164,8 +146,6 @@ const BookOrder = () => {
     }));
   };
 
- 
-
   return (
     <div className="container overflow-hidden p-4">
       <h1 className="text-2xl font-bold mb-4">Order Details</h1>
@@ -188,11 +168,10 @@ const BookOrder = () => {
           <button
             key={status}
             onClick={() => setActiveTab(status)}
-            className={`py-2 px-4 rounded-md ${
-              activeTab === status
-                ? "bg-green-500 text-white"
-                : "bg-gray-200 text-black hover:bg-gray-300"
-            }`}
+            className={`py-2 px-4 rounded-md ${activeTab === status
+              ? "bg-green-500 text-white"
+              : "bg-gray-200 text-black hover:bg-gray-300"
+              }`}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </button>
@@ -206,26 +185,27 @@ const BookOrder = () => {
       <div className="overflow-x-auto">
         <table className="min-w-full border bg-white text-black shadow-md rounded-lg">
           <thead>
-            <tr className="text-left bg-gray-800 text-white">
+            <tr className="text-left bg-blue-600 text-white">
               <th className="py-2 px-4">Customer Info</th>
               <th className="py-2 px-4">Shipping Information</th>
               <th className="py-2 px-4">Product Details</th>
               <th className="py-2 px-4">Status</th>
+              <th className="py-2 px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {currentOrders.map((order) => (
               <React.Fragment key={order._id}>
-                <tr className="border bg-gray-500 text-white">
+                <tr className="border bg-blue-300 text-black">
                   <td className="py-2 px-4 text-center">
                     <p>Order Date <br />{new Date(order.createdAt).toLocaleString()}</p>
-                    <p>{order.user.email}</p>
-                    <p>{order.address.phone}</p>
+                    <p>{order.user.phoneNumber}</p>
                   </td>
                   <td className="py-2 px-4">
                     <p>{order.address.street}</p>
                     <p>{order.address.city}, {order.address.state}</p>
                     <p>{order.address.country}, {order.address.postalCode}</p>
+                    <p>{order.address.phone}</p>
                   </td>
                   <td className="py-2 px-4">
                     <button
@@ -246,37 +226,49 @@ const BookOrder = () => {
                             <p className="font-semibold">{product.productName}</p>
                             <p>Product ID: {product.productId}</p>
                             <div className="grid grid-cols-2 gap-2">
-                              <p>Quantity: {product.quantity}</p>
-                              <p>Price: {product.price}</p>
-                              <p>Size: {product.attributes.size.join(", ")}</p>
-                              <p>Color: {product.attributes.color.join(", ")}</p>
-                             
+                              <p>Price: ₹{product.price}</p>
+                              <p>Qty: {product.quantity}</p>
                             </div>
-                            <Link to={`/product/${product.productId}`} className="p-3 m-2 border hover:bg-blue-500 hover:border-none " >View Product Details</Link>
                           </div>
                         ))}
                       </div>
                     )}
                   </td>
-                  <td className="py-2 px-4 flex justify-center items-center gap-4 flex-wrap">
-                    <button
-                      onClick={() => handleOnclick(order._id, order.status, order.user._id)}
-                      className={`py-1 px-2 rounded ${
-                        order.status === "delivered"
-                          ? "bg-green-500 text-white"
-                          : order.status === "cancelled"
-                          ? "bg-red-500 text-white"
-                          : "bg-blue-500 text-white"
-                      }`}
-                    >
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                    </button>
-                    {order.status !== "delivered" && order.status !== "cancelled" && (
+                  <td className={`py-2 px-4 text-center ${getStatusClass(order.status)}`}>
+  {order.status}
+</td>
+                  <td className="py-2 px-4 text-center">
+                    {order.status === "pending" && (
+                      <button
+                        onClick={() => handleOnclick(order._id, order.status, order.userId)}
+                        className="bg-green-600 text-white rounded px-2 py-1"
+                      >
+                        Process Order
+                      </button>
+                    )}
+                    {order.status === "processing" && (
+                      <button
+                        onClick={() => handleOnclick(order._id, order.status, order.userId)}
+                        className="bg-green-600 text-white rounded px-2 py-1"
+                      >
+                        Ship Order
+                      </button>
+                    )}
+                    {order.status === "shipped" && (
+                      <button
+                        onClick={() => handleOnclick(order._id, order.status, order.userId)}
+                        className="bg-green-600 text-white rounded px-2 py-1"
+                      >
+                        Mark as Delivered
+                      </button>
+                    )}
+                    {/* Show the Cancel button only for 'pending' and 'processing' orders */}
+                    {(order.status === "pending" || order.status === "processing") && (
                       <button
                         onClick={() => cancelOrder(order._id)}
-                        className="ml-2 py-1 px-2 bg-red-500 text-white rounded"
+                        className="bg-red-600 text-white rounded px-2 py-1 mt-1"
                       >
-                        Cancel Order
+                        Cancel
                       </button>
                     )}
                   </td>
@@ -285,46 +277,34 @@ const BookOrder = () => {
             ))}
           </tbody>
         </table>
-      </div>
 
-      <div className="flex justify-center mt-4">
-        <button
-          onClick={handlePreviousPage}
-          disabled={currentPage === 1}
-          className="px-4 py-2 mx-2 bg-gray-300 text-gray-800 rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="px-4 py-2">{`Page ${currentPage} of ${totalPages}`}</span>
-        <button
-          onClick={handleNextPage}
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 mx-2 bg-gray-300 text-gray-800 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
+        <div className="flex justify-between mt-4">
+          <button onClick={handlePreviousPage} disabled={currentPage === 1} className="bg-gray-300 text-black px-4 py-2 rounded disabled:opacity-50">
+            Previous
+          </button>
+          <button onClick={handleNextPage} disabled={currentPage === totalPages} className="bg-gray-300 text-black px-4 py-2 rounded disabled:opacity-50">
+            Next
+          </button>
+        </div>
       </div>
-
-      <Modal isOpen={otpModalOpen} onRequestClose={() => setOtpModalOpen(false)}>
-        <h2>Enter OTP to Verify Order</h2>
-        <input
-          type="text"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          className="border p-2 rounded"
-        />
-        <button onClick={verifyOrder} className="ml-2 bg-blue-500 text-white px-4 py-2 rounded">
-          Verify
-        </button>
-        <button
-          onClick={() => setOtpModalOpen(false)}
-          className="ml-2 bg-red-500 text-white px-4 py-2 rounded"
-        >
-          Cancel
-        </button>
-      </Modal>
     </div>
   );
 };
 
 export default BookOrder;
+const getStatusClass = (status) => {
+  switch (status) {
+    case "pending":
+      return "text-yellow-500"; // Yellow for pending
+    case "processing":
+      return "text-blue-500"; // Blue for processing
+    case "shipped":
+      return "text-purple-500"; // Purple for shipped
+    case "delivered":
+      return "text-green-500"; // Green for delivered
+    case "cancelled":
+      return "text-red-500"; // Red for cancelled
+    default:
+      return "text-gray-500"; // Default color for other statuses
+  }
+};

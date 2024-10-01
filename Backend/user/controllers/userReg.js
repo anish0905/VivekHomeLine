@@ -1,160 +1,127 @@
 // controllers/authController.js
 const User = require("../models/User");
-const nodemailer = require("nodemailer");
 const twilio = require("twilio")
 const jwt = require("jsonwebtoken")
-
-const generateOTP = (length) => {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
-};
-
-const sendOtp = async (mobileNumber) => {
-  try {
-    const verification = await client.verify
-      .services(process.env.TWILIO_VERIFY_SERVICE_SID)
-      .verifications.create({ to: mobileNumber, channel: "sms" });
-    console.log(`OTP sent to ${mobileNumber}. SID: ${verification.sid}`);
-  } catch (error) {
-    console.error("Error sending OTP:", error);
-    throw new Error("Failed to send OTP. Please verify the phone number.");
-  }
-};
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-const client = new twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-
-exports.register = async (req, res) => {
-  try {
-    const { email, password, name, mobile } = req.body;
-
-    if (!email || !password || !name) {
-      return res.status(400).json({ message: "All fields are mandatory" });
-    }
-
-    let user = await User.findOne({ email });
-
-    if (user) {
-      if (!user.isVerified) {
-        user.generateOtp();
-        await user.save();
-
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: user.email,
-          subject: "Verify your email",
-          text: `Your OTP is ${user.otp}`,
-        };
-
-        transporter.sendMail(mailOptions, (error) => {
-          if (error) return res.status(500).send(error.toString());
-          return res.status(200).send("OTP resent to your email");
-        });
-      } else {
-        return res.status(400).send("User already exists and is verified");
-      }
-    } else {
-      user = new User({ email, password, name, mobile });
-      user.generateOtp();
-      await user.save();
-
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: user.email,
-        subject: "Verify your email",
-        text: `Your OTP is ${user.otp}`,
-      };
-
-      transporter.sendMail(mailOptions, (error) => {
-        if (error) return res.status(500).send(error.toString());
-        res.status(200).send("OTP sent to your email for verification");
-      });
-    }
-  } catch (error) {
-    res.status(500).json({
-      message: "An error occurred during registration",
-      error: error.message,
-    });
-  }
-};
-
-
-exports.verifyOtp = async (req, res) => {
-  const { phoneNumber, otp } = req.body;
-  try {
-      const verificationCheck = await client.verify.services(config.twilio.verifyServiceSid)
-          .verificationChecks
-          .create({ to: phoneNumber, code: otp });
-
-      if (verificationCheck.status === "approved") {
-          await User.updateOne({ phoneNumber }, { isVerified: true });
-          res.status(200).json({ message: "OTP verified successfully." });
-      } else {
-          res.status(400).json({ message: "Invalid OTP." });
-      }
-  } catch (error) {
-      res.status(500).json({ message: "Error verifying OTP", error });
-  }
-};
+const otpGenerator = require('otp-generator');
 
 
 
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-exports.resendOtp = async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).send("User not found");
-
-  user.generateOtp();
-  await user.save();
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: user.email,
-    subject: "Verify your email",
-    text: `Your OTP is ${user.otp}`,
-  };
-
-  transporter.sendMail(mailOptions, (error) => {
-    if (error) return res.status(500).send(error.toString());
-    res.status(200).send("OTP resent to your email");
-  });
-};
-
-
-// Function to generate a 6-digit OTP
+const twilioClient = new twilio(accountSid, authToken);
 
 
 // Login
 exports.login = async (req, res) => {
-  const { phoneNumber, password } = req.body;
   try {
-      const user = await User.findOne({ phoneNumber });
-      if (!user || !(await bcrypt.compare(password, user.password))) {
-          return res.status(401).json({ message: "Invalid credentials" });
-      }
+    const { phoneNumber } = req.body;
+    
+    // Check if phoneNumber exists in the request
+    if (!phoneNumber) {
+        return res.status(400).json({
+            success: false,
+            msg: "Phone number is required."
+        });
+    }
 
-      if (!user.isVerified) {
-          return res.status(403).json({ message: "User not verified." });
-      }
+    console.log(`Sending OTP to: ${phoneNumber}`);
 
-      const token = jwt.sign({ id: user._id }, config.jwtSecret, { expiresIn: '1h' });
-      res.status(200).json({ token });
+    // Generate a 6-digit OTP without alphabets or special characters
+    const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
+    const cDate = new Date();
+
+    // Save OTP and expiration date to the database (set expiration to 5 minutes)
+    await User.findOneAndUpdate(
+        { phoneNumber },
+        { otp, otpExpiration: new Date(cDate.getTime() + 5 * 60 * 1000) },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    // Send OTP via Twilio and wait for the response
+    await twilioClient.messages.create({
+        body: `Welcome to HomeLine. Your OTP is: ${otp}`,
+        to: phoneNumber,
+        from: process.env.TWILIO_PHONE_NUMBER
+    });
+
+    return res.status(200).json({
+        success: true,
+        msg: "OTP sent successfully",
+        
+    });
+
+} catch (error) {
+    console.error(`Error sending OTP: ${error.message}`);
+    return res.status(400).json({
+        success: false,
+        msg: error.message
+    });
+}
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { phoneNumber, otp } = req.body;
+
+    // Check if phoneNumber and OTP exist in the request
+    if (!phoneNumber || !otp) {
+      return res.status(400).json({
+        success: false,
+        msg: "Mobile number and OTP are required."
+      });
+    }
+
+    // Find the user by mobile number
+    const user = await User.findOne({ phoneNumber });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found."
+      });
+    }
+
+    // Check if the OTP matches and if it has not expired
+    if (user.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid OTP."
+      });
+    }
+
+    // Check for OTP expiration
+    if (user.otpExpiration < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        msg: "OTP has expired. Please request a new one."
+      });
+    }
+
+    // OTP is valid, mark user as verified
+    user.isVerified = true;
+    user.otp = null; // Optionally clear OTP after verification
+    user.otpExpiration = null; // Optionally clear expiration
+    await user.save();
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { _id: user._id, phoneNumber: user.phoneNumber },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' } // Set token expiration time as needed
+    );
+
+    return res.status(200).json({
+      success: true,
+      msg: "OTP verified successfully. User is now verified.",
+      token,
+      user // Send the token in the response
+    });
   } catch (error) {
-      res.status(500).json({ message: "Error logging in", error });
+    console.error(`Error verifying OTP: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error. Please try again later."
+    });
   }
 };
 
@@ -233,9 +200,9 @@ exports.removeItemFromCart = async (req, res) => {
     // Step 2: Use the aggregation pipeline to recalculate the total price after removal
     const updatedUser = await User.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(userId) } }, // Correct use of ObjectId
-      { 
+      {
         $addFields: {
-          totalPrice: { 
+          totalPrice: {
             $sum: {
               $map: {
                 input: "$cart",

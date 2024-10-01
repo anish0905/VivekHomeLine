@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // Function to capitalize words
@@ -12,28 +12,27 @@ const capitalizeWords = (str) => {
     .join(" ");
 };
 
-const MiniDrawer = ({ isOpen, onClose, setIsLoginModalOpen }) => { // Accept setIsLoginModalOpen as a prop
+const MiniDrawer = ({ isOpen, onClose }) => {
   const [openCategory, setOpenCategory] = useState(null);
   const [categories, setCategories] = useState([]);
-  const token = localStorage.getItem("token"); // Check if token exists for login status
-
+  const token = localStorage.getItem("token");
+  const navigate = useNavigate();
   const URI = import.meta.env.VITE_API_URL;
 
   // Fetch categories from the API
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${URI}api/admin/navheaders`);
+        setCategories(response.data);
+        localStorage.setItem("categories", JSON.stringify(response.data)); // Save categories to local storage (optional)
+      } catch (error) {
+        console.error("Error fetching categories:", error.message);
+      }
+    };
+
     fetchCategories();
   }, [URI]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(`${URI}api/admin/navheaders`);
-      const categoriesData = response.data;
-      setCategories(categoriesData);
-      localStorage.setItem("categories", JSON.stringify(categoriesData)); // Save categories to local storage (optional)
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
 
   const handleCategoryClick = (index) => {
     setOpenCategory(openCategory === index ? null : index);
@@ -63,22 +62,19 @@ const MiniDrawer = ({ isOpen, onClose, setIsLoginModalOpen }) => { // Accept set
           </Link>
         </li>
 
-        {!token && (
-          <li>
+        {/* Login / My Account Link */}
+        <li>
+          {!token ? (
             <button
-              className="block p-2 rounded hover:bg-gray-700 transition duration-200"
+              className="block w-full text-left p-2 rounded hover:bg-gray-700 transition duration-200"
               onClick={() => {
-                setIsLoginModalOpen(true); // Open Login Modal
+                navigate("/login");
                 onClose();
               }}
             >
               Login
             </button>
-          </li>
-        )}
-
-        {token && (
-          <li>
+          ) : (
             <Link
               to="/user-profile/myaccount"
               className="block p-2 rounded hover:bg-gray-700 transition duration-200"
@@ -86,9 +82,8 @@ const MiniDrawer = ({ isOpen, onClose, setIsLoginModalOpen }) => { // Accept set
             >
               My Account
             </Link>
-            {/* Other account-related links */}
-          </li>
-        )}
+          )}
+        </li>
 
         {/* Dynamic Categories fetched from API */}
         {categories.map((category, index) => (

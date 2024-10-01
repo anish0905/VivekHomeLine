@@ -36,15 +36,19 @@ const cartItemSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  name: { type: String,},
-
-  email: { type: String,unique: true },
-  password: { type: String },
-  mobileNumber: { type: String },
-
+  name: { type: String, },
+  phoneNumber: { type: String },
   isVerified: { type: Boolean, default: false },
-  otp: { type: String, required: true },
-  otpExpires: { type: Date, required: true },
+  otp: {
+    type: String,
+    require: true
+  },
+  otpExpiration: {
+    type: Date,
+    default: Date.now,
+    get: (otpExpiration) => otpExpiration.getTime(),
+    set: (otpExpiration) => new Date(otpExpiration)
+  },
   addresses: [addressSchema],
   cart: [cartItemSchema],
 });

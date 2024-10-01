@@ -142,7 +142,7 @@ const Navbar = () => {
 
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-65 flex items-center justify-center z-50">
-          <div className="relative bg-white p-0 h-[80vh] sm:h-[500px] rounded-lg shadow-lg w-full max-w-md mx-4 sm:mx-0">
+          <div className="relative bg-white p-0  rounded-lg shadow-lg w-full max-w-md mx-4 sm:mx-0">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
               onClick={toggleLoginModal}

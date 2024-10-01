@@ -3,9 +3,7 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/userReg");
 
-router.post("/register", authController.register);
 router.post("/verifyOtp", authController.verifyOtp);
-router.post("/resendOtp", authController.resendOtp);
 router.post("/login", authController.login);
 router.post("/addItemToCart", authController.addItemToCart);
 router.delete("/removeItemFromCart/:userId/:productId", authController.removeItemFromCart);
