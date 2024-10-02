@@ -199,13 +199,13 @@ const BookOrder = () => {
                 <tr className="border bg-blue-300 text-black">
                   <td className="py-2 px-4 text-center">
                     <p>Order Date <br />{new Date(order.createdAt).toLocaleString()}</p>
-                    <p>{order.user.phoneNumber}</p>
+                    <p>{order.user?.phoneNumber}</p>
                   </td>
                   <td className="py-2 px-4">
-                    <p>{order.address.street}</p>
-                    <p>{order.address.city}, {order.address.state}</p>
-                    <p>{order.address.country}, {order.address.postalCode}</p>
-                    <p>{order.address.phone}</p>
+                    <p>{order?.address?.street}</p>
+                    <p>{order?.address?.city}, {order?.address?.state}</p>
+                    <p>{order?.address?.country}, {order?.address?.postalCode}</p>
+                    <p>{order?.address?.phone}</p>
                   </td>
                   <td className="py-2 px-4">
                     <button
